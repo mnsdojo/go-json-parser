@@ -54,7 +54,17 @@ func (t *Tokenizer) GetNextToken() (*Token, error) {
 			t.moveNext()
 			return &Token{Value: ",", Type: Comma}, nil
 		case 't', 'f':
-			return t.readBoolean()
+			token, err := t.readBoolean()
+			if err != nil {
+				return nil, err
+			}
+			return token, nil
+		case 'n':
+			token, err := t.readNull()
+			if err != nil {
+				return nil, err
+			}
+			return token, nil
 		case '"':
 			token, err := t.readString()
 			if err != nil {
@@ -112,6 +122,13 @@ func (t *Tokenizer) readString() (*Token, error) {
 	t.moveNext()
 
 	return &Token{Value: strValue, Type: String}, nil
+}
+
+func (t *Tokenizer) readNull() (*Token, error) {
+	if !t.matchString("null") {
+		return nil, fmt.Errorf("invalid null value")
+	}
+	return &Token{Value: "null", Type: Null}, nil
 }
 
 func (t *Tokenizer) readBoolean() (*Token, error) {
