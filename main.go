@@ -19,13 +19,15 @@ func main() {
     }`
 
 	tokenizer := tokenizer.NewTokenizer(jsonInput)
-	token, err := tokenizer.GetNextToken()
-	if err != nil {
-		fmt.Println("error", err)
-		return
-	}
-
-	if token != nil {
-		fmt.Printf("Token Type: %s, Value: %s\n", token.Type, token.Value)
+	for {
+		token, err := tokenizer.GetNextToken()
+		if err != nil {
+			fmt.Println("error", err)
+			return
+		}
+		if token == nil {
+			break
+		}
+		fmt.Printf("Token Type: %s, Value: %s\n", token.Type.String(), token.Value)
 	}
 }

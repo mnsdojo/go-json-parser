@@ -53,6 +53,8 @@ func (t *Tokenizer) GetNextToken() (*Token, error) {
 		case ',':
 			t.moveNext()
 			return &Token{Value: ",", Type: Comma}, nil
+		case 't', 'f':
+			return t.readBoolean()
 		case '"':
 			token, err := t.readString()
 			if err != nil {
@@ -112,6 +114,23 @@ func (t *Tokenizer) readString() (*Token, error) {
 	return &Token{Value: strValue, Type: String}, nil
 }
 
+func (t *Tokenizer) readBoolean() (*Token, error) {
+	if t.currentChar == 't' {
+		if !t.matchString("true") {
+			return nil, fmt.Errorf("invalid boolean value")
+		}
+		return &Token{Value: "true", Type: Boolean}, nil
+	}
+	if t.currentChar == 'f' {
+		if !t.matchString("false") {
+			return nil, fmt.Errorf("invalid boolean value")
+		}
+		return &Token{Value: "false", Type: Boolean}, nil
+
+	}
+	return nil, fmt.Errorf("invalid boolean value starting with %c", t.currentChar)
+}
+
 func (t *Tokenizer) moveNext() {
 	t.position++
 	if t.position < len(t.input) {
@@ -119,4 +138,14 @@ func (t *Tokenizer) moveNext() {
 	} else {
 		t.currentChar = 0
 	}
+}
+
+func (t *Tokenizer) matchString(str string) bool {
+	for i := 0; i < len(str); i++ {
+		if t.currentChar != str[i] {
+			return false
+		}
+		t.moveNext()
+	}
+	return true
 }
