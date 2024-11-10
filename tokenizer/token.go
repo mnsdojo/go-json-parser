@@ -15,8 +15,8 @@ const (
 
 // token represets single tokn which holds type vand value --
 type Token struct {
-	Type  TokenType
 	Value string
+	Type  TokenType
 }
 
 func (t TokenType) String() string {
