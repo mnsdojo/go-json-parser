@@ -18,7 +18,6 @@ func NewTokenizer(input string) *Tokenizer {
 
 // skipWhitespace skips any whitespace characters (spaces, tabs, newlines).
 func (t *Tokenizer) skipWhitespace() {
-	// Skip over whitespace characters
 	for t.currentChar == ' ' || t.currentChar == '\t' || t.currentChar == '\n' {
 		t.moveNext()
 	}
@@ -27,11 +26,45 @@ func (t *Tokenizer) skipWhitespace() {
 func (t *Tokenizer) GetNextToken() (*Token, error) {
 	for t.position < len(t.input) {
 		t.skipWhitespace()
+		if t.position >= len(t.input) {
+			return nil, nil
+		}
+
 		fmt.Printf("Position: %d, Current Char: %c\n", t.position, t.currentChar)
+
+		// handle different token types
+		switch t.currentChar {
+		case '{':
+			t.moveNext()
+			return &Token{Value: "{", Type: ObjectStart}, nil
+		case '}':
+			t.moveNext()
+			return &Token{Value: "}", Type: ObjectEnd}, nil
+		case '[':
+			t.moveNext()
+			return &Token{Value: "[", Type: ArrayStart}, nil
+		case ']':
+			t.moveNext()
+			return &Token{Value: "]", Type: ArrayEnd}, nil
+
+		case ':':
+			t.moveNext()
+			return &Token{Value: ":", Type: Colon}, nil
+		case ',':
+			t.moveNext()
+			return &Token{Value: ",", Type: Comma}, nil
+		case '"':
+			return t.readString(), nil
+		}
+
 		t.moveNext()
 	}
 
 	return nil, nil
+}
+
+func (t *Tokenizer) readString() *Token {
+	return nil
 }
 
 func (t *Tokenizer) moveNext() {
