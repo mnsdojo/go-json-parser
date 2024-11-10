@@ -10,6 +10,9 @@ const (
 	ArrayEnd
 	String
 	Number
+	Colon
+	Comma
+	Boolean
 	Null
 )
 
@@ -31,6 +34,11 @@ func (t TokenType) String() string {
 		return "String"
 	case Number:
 		return "number"
+	case Colon:
+		return "Colon"
+	case Comma:
+		return "Comma"
+
 	case Null:
 		return "Null"
 	default:
