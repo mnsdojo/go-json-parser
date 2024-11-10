@@ -64,7 +64,32 @@ func (t *Tokenizer) GetNextToken() (*Token, error) {
 }
 
 func (t *Tokenizer) readString() *Token {
-	return nil
+	var strValue string
+
+	t.moveNext()
+
+	for t.currentChar != '"' && t.position < len(t.input) {
+		if t.currentChar == '\\' {
+
+			t.moveNext()
+			switch t.currentChar {
+			case '"':
+				strValue += "\""
+			case '\\':
+				strValue += "\\"
+			default:
+				strValue += string(t.currentChar)
+			}
+			t.moveNext()
+
+		} else {
+			strValue += string(t.currentChar)
+			t.moveNext()
+		}
+	}
+	// move to the closing quote '"'
+	t.moveNext()
+	return &Token{Value: strValue, Type: String}
 }
 
 func (t *Tokenizer) moveNext() {
