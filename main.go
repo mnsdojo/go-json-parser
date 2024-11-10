@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-
+	"github.com/mnsdojo/go-json-parser/parser"
 	"github.com/mnsdojo/go-json-parser/tokenizer"
 )
 
@@ -19,15 +18,21 @@ func main() {
     }`
 
 	tokenizer := tokenizer.NewTokenizer(jsonInput)
-	for {
-		token, err := tokenizer.GetNextToken()
-		if err != nil {
-			fmt.Println("error", err)
-			return
-		}
-		if token == nil {
-			break
-		}
-		fmt.Printf("Token Type: %s, Value: %s\n", token.Type.String(), token.Value)
-	}
+
+	// for {
+	// 	token, err := tokenizer.GetNextToken()
+	// 	if err != nil {
+	// 		fmt.Println("error", err)
+	// 		return
+	// 	}
+	// 	if token == nil {
+	// 		break
+	// 	}
+	// 	fmt.Printf("Token Type: %s, Value: %s\n", token.Type.String(), token.Value)
+	// }
+	//
+	//
+	// Initialize the parsre with the tokenizer
+
+	parser := parser.NewParser(tokenizer)
 }
