@@ -54,7 +54,11 @@ func (t *Tokenizer) GetNextToken() (*Token, error) {
 			t.moveNext()
 			return &Token{Value: ",", Type: Comma}, nil
 		case '"':
-			return t.readString(), nil
+			token, err := t.readString()
+			if err != nil {
+				return nil, err
+			}
+			return token, nil
 		}
 
 		t.moveNext()
@@ -63,33 +67,49 @@ func (t *Tokenizer) GetNextToken() (*Token, error) {
 	return nil, nil
 }
 
-func (t *Tokenizer) readString() *Token {
+func (t *Tokenizer) readString() (*Token, error) {
 	var strValue string
 
+	// Move past the opening quote.
 	t.moveNext()
 
 	for t.currentChar != '"' && t.position < len(t.input) {
 		if t.currentChar == '\\' {
-
+			// Move past the escape character.
 			t.moveNext()
+			// Handle different escape sequences.
 			switch t.currentChar {
 			case '"':
 				strValue += "\""
 			case '\\':
 				strValue += "\\"
+			case 'n':
+				strValue += "\n"
+			case 't':
+				strValue += "\t"
+			case 'r':
+				strValue += "\r"
 			default:
-				strValue += string(t.currentChar)
+				// Handle invalid escape sequences.
+				return nil, fmt.Errorf("invalid escape sequence \\%c", t.currentChar)
 			}
 			t.moveNext()
-
 		} else {
+			// Add regular character to string value.
 			strValue += string(t.currentChar)
 			t.moveNext()
 		}
 	}
-	// move to the closing quote '"'
+
+	// If the string ends without a closing quote, handle it.
+	if t.currentChar != '"' {
+		return nil, fmt.Errorf("unterminated string literal")
+	}
+
+	// Move past the closing quote.
 	t.moveNext()
-	return &Token{Value: strValue, Type: String}
+
+	return &Token{Value: strValue, Type: String}, nil
 }
 
 func (t *Tokenizer) moveNext() {
