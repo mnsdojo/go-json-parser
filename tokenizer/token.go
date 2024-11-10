@@ -38,7 +38,8 @@ func (t TokenType) String() string {
 		return "Colon"
 	case Comma:
 		return "Comma"
-
+	case Boolean:
+		return "Boolean"
 	case Null:
 		return "Null"
 	default:
