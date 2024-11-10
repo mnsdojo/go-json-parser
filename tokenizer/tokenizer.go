@@ -1,6 +1,9 @@
 package tokenizer
 
-import "fmt"
+import (
+	"fmt"
+	"unicode"
+)
 
 type Tokenizer struct {
 	input       string
@@ -71,12 +74,54 @@ func (t *Tokenizer) GetNextToken() (*Token, error) {
 				return nil, err
 			}
 			return token, nil
+		case '-', '+', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9': // Numbers
+			token, err := t.readNumber()
+			if err != nil {
+				return nil, err
+			}
+			return token, nil
+
 		}
 
 		t.moveNext()
 	}
 
 	return nil, nil
+}
+
+func (t *Tokenizer) readNumber() (*Token, error) {
+	var numValue string
+
+	if t.currentChar == '-' || t.currentChar == '+' {
+		numValue += string(t.currentChar)
+		t.moveNext()
+	}
+
+	// handling integers
+	if !unicode.IsDigit(rune(t.currentChar)) {
+		return nil, fmt.Errorf("invalid character '%c' found in number", t.currentChar)
+	}
+
+	for t.position < len(t.input) && unicode.IsDigit(rune(t.currentChar)) {
+		numValue += string(t.currentChar)
+		t.moveNext()
+	}
+
+	// handling fractional part of the number if found
+
+	if t.currentChar == '.' {
+		numValue += "."
+		t.moveNext()
+		if !unicode.IsDigit(rune(t.currentChar)) {
+			return nil, fmt.Errorf("invalid fractional part in number")
+		}
+		for t.position < len(t.input) && unicode.IsDigit(rune(t.currentChar)) {
+			numValue += string(t.currentChar)
+			t.moveNext()
+		}
+
+	}
+	return &Token{Value: numValue, Type: Number}, nil
 }
 
 func (t *Tokenizer) readString() (*Token, error) {
