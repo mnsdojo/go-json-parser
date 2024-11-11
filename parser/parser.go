@@ -43,6 +43,21 @@ func (p *Parser) parseValues() (interface{}, error) {
 func (p *Parser) parseObject() (map[string]interface{}, error) {
 }
 
+func (p *Parser) parseBoolean() (bool, error) {
+	if p.currentToken.Value == "true" {
+		if err := p.advanceToken(); err != nil {
+			return false, err
+		}
+		return true, nil
+	} else if p.currentToken.Value == "false" {
+		if err := p.advanceToken(); err != nil {
+			return false, err
+		}
+		return false, nil
+	}
+	return false, fmt.Errorf("expected boolean token, got %s", p.currentToken.Value)
+}
+
 func (p *Parser) parseString() (string, error) {
 	if p.currentToken.Type != tokenizer.String {
 		return "", fmt.Errorf("expected string token, got %s", p.currentToken.Type)
