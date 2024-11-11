@@ -43,21 +43,15 @@ func (p *Parser) parseValues() (interface{}, error) {
 func (p *Parser) parseObject() (map[string]interface{}, error) {
 }
 
-func (p *Parser) parseArray() ([]interface{}, error) {}
-
 func (p *Parser) parseString() (string, error) {
 	if p.currentToken.Type != tokenizer.String {
-		return "", fmt.Errorf("expected strring token got %s", p.currentToken.Type)
+		return "", fmt.Errorf("expected string token, got %s", p.currentToken.Type)
 	}
-	return p.currentToken.Value, nil
-}
-
-func (p *Parser) parseBoolean() (bool, error) {
-	if p.currentToken.Value == "true" {
-		return true, nil
-	} else {
-		return false, nil
+	value := p.currentToken.Value
+	if err := p.advanceToken(); err != nil {
+		return "", err
 	}
+	return value, nil
 }
 
 func (p *Parser) parseNull() ([]interface{}, error) {
