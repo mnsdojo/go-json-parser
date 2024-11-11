@@ -49,10 +49,11 @@ func (p *Parser) parseObject() (map[string]interface{}, error) {
 	obj := make(map[string]interface{})
 
 	// Advance past the opening brace
-	if err := p.advanceToken(); err != nil {
+	if err := p.advanceAndCheckToken(tokenizer.ObjectStart); err != nil {
 		return nil, err
 	}
 	// loop till end of the object }
+
 	for p.currentToken.Type != tokenizer.ObjectEnd {
 		// Parse the key as a string
 		key, err := p.parseString()
@@ -61,11 +62,8 @@ func (p *Parser) parseObject() (map[string]interface{}, error) {
 		}
 
 		// Expect a colon after the key
-		if p.currentToken.Type != tokenizer.Colon {
-			return nil, fmt.Errorf("expected colon after object key, got %s", p.currentToken.Type)
-		}
-		if err := p.advanceToken(); err != nil {
-			return nil, err
+		if err := p.advanceAndCheckToken(tokenizer.Colon); err != nil {
+			return nil, fmt.Errorf("expected colon after key '%s': %w", key, err)
 		}
 
 		// Parse the value
@@ -86,7 +84,7 @@ func (p *Parser) parseObject() (map[string]interface{}, error) {
 	}
 
 	// Advance past the closing brace
-	if err := p.advanceToken(); err != nil {
+	if err := p.advanceAndCheckToken(tokenizer.ObjectEnd); err != nil {
 		return nil, err
 	}
 	return obj, nil
