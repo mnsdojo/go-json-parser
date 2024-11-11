@@ -69,7 +69,10 @@ func (p *Parser) parseString() (string, error) {
 	return value, nil
 }
 
-func (p *Parser) parseNull() ([]interface{}, error) {
+func (p *Parser) parseNull() (interface{}, error) {
+	if p.currentToken.Type != tokenizer.Null {
+		return nil, fmt.Errorf("expected null token, got %s", p.currentToken.Type)
+	}
 	if err := p.advanceToken(); err != nil {
 		return nil, err
 	}
