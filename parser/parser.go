@@ -19,6 +19,10 @@ func NewParser(tokenizer *tokenizer.Tokenizer) *Parser {
 }
 
 func (p *Parser) Parse() (interface{}, error) {
+	// initialize curent token
+	if err := p.advanceToken(); err != nil {
+		return nil, err
+	}
 	return p.parseValues()
 }
 
@@ -42,15 +46,87 @@ func (p *Parser) parseValues() (interface{}, error) {
 }
 
 func (p *Parser) parseObject() (map[string]interface{}, error) {
+	obj := make(map[string]interface{})
+
+	// Advance past the opening brace
+	if err := p.advanceToken(); err != nil {
+		return nil, err
+	}
+	// loop till end of the object }
+	for p.currentToken.Type != tokenizer.ObjectEnd {
+		// Parse the key as a string
+		key, err := p.parseString()
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse object key: %w", err)
+		}
+
+		// Expect a colon after the key
+		if p.currentToken.Type != tokenizer.Colon {
+			return nil, fmt.Errorf("expected colon after object key, got %s", p.currentToken.Type)
+		}
+		if err := p.advanceToken(); err != nil {
+			return nil, err
+		}
+
+		// Parse the value
+		value, err := p.parseValues()
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse object value for key '%s': %w", key, err)
+		}
+		obj[key] = value
+
+		// Check for comma or end of object
+		if p.currentToken.Type == tokenizer.Comma {
+			if err := p.advanceToken(); err != nil {
+				return nil, err
+			}
+		} else if p.currentToken.Type != tokenizer.ObjectEnd {
+			return nil, fmt.Errorf("expected comma or end of object, got %s", p.currentToken.Type)
+		}
+	}
+
+	// Advance past the closing brace
+	if err := p.advanceToken(); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+func (p *Parser) parseArray() ([]interface{}, error) {
+	var array []interface{}
+	if err := p.advanceToken(); err != nil {
+		return nil, err
+	}
+	for p.currentToken.Type != tokenizer.ArrayEnd {
+		// parse the next value in the arrray
+		element, err := p.parseValues()
+		if err != nil {
+			return nil, err
+		}
+		array = append(array, element)
+		// check for comma at the end
+		if p.currentToken.Type != tokenizer.Comma {
+			if err := p.advanceToken(); err != nil {
+				return nil, err
+			} else if p.currentToken.Type != tokenizer.ArrayEnd {
+				return nil, fmt.Errorf("expected comma or end of array, got %s", p.currentToken.Type)
+			}
+		}
+	}
+	if err := p.advanceToken(); err != nil {
+		return nil, err
+	}
+	return array, nil
 }
 
 func (p *Parser) parseBoolean() (bool, error) {
-	if p.currentToken.Value == "true" {
+	switch p.currentToken.Value {
+	case "true":
 		if err := p.advanceToken(); err != nil {
 			return false, err
 		}
 		return true, nil
-	} else if p.currentToken.Value == "false" {
+	case "false":
 		if err := p.advanceToken(); err != nil {
 			return false, err
 		}
