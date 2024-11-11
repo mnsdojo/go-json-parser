@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/mnsdojo/go-json-parser/tokenizer"
 )
@@ -84,7 +85,10 @@ func (p *Parser) parseNumber() (interface{}, error) {
 	if p.currentToken.Type != tokenizer.Number {
 		return nil, fmt.Errorf("expected number token, got %s", p.currentToken.Type)
 	}
-	value := p.currentToken.Value
+	value, err := strconv.ParseFloat(p.currentToken.Value, 64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse number: %s", p.currentToken.Value)
+	}
 	if err := p.advanceToken(); err != nil {
 		return nil, err
 	}
