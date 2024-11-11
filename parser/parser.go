@@ -94,26 +94,29 @@ func (p *Parser) parseObject() (map[string]interface{}, error) {
 
 func (p *Parser) parseArray() ([]interface{}, error) {
 	var array []interface{}
-	if err := p.advanceToken(); err != nil {
+	if err := p.advanceAndCheckToken(tokenizer.ArrayStart); err != nil {
 		return nil, err
 	}
 	for p.currentToken.Type != tokenizer.ArrayEnd {
-		// parse the next value in the arrray
+		// Parse the next value in the array
 		element, err := p.parseValues()
 		if err != nil {
 			return nil, err
 		}
 		array = append(array, element)
-		// check for comma at the end
-		if p.currentToken.Type != tokenizer.Comma {
+
+		// Check for comma or end of array
+		if p.currentToken.Type == tokenizer.Comma {
 			if err := p.advanceToken(); err != nil {
 				return nil, err
-			} else if p.currentToken.Type != tokenizer.ArrayEnd {
-				return nil, fmt.Errorf("expected comma or end of array, got %s", p.currentToken.Type)
 			}
+		} else if p.currentToken.Type != tokenizer.ArrayEnd {
+			return nil, fmt.Errorf("expected comma or end of array, got %s", p.currentToken.Type)
 		}
 	}
-	if err := p.advanceToken(); err != nil {
+
+	// Advance past the closing bracket
+	if err := p.advanceAndCheckToken(tokenizer.ArrayEnd); err != nil {
 		return nil, err
 	}
 	return array, nil
@@ -136,8 +139,8 @@ func (p *Parser) parseBoolean() (bool, error) {
 }
 
 func (p *Parser) parseString() (string, error) {
-	if p.currentToken.Type != tokenizer.String {
-		return "", fmt.Errorf("expected string token, got %s", p.currentToken.Type)
+	if err := p.checkTokenType(tokenizer.String); err != nil {
+		return "", err
 	}
 	value := p.currentToken.Value
 	if err := p.advanceToken(); err != nil {
@@ -147,8 +150,8 @@ func (p *Parser) parseString() (string, error) {
 }
 
 func (p *Parser) parseNull() (interface{}, error) {
-	if p.currentToken.Type != tokenizer.Null {
-		return nil, fmt.Errorf("expected null token, got %s", p.currentToken.Type)
+	if err := p.checkTokenType(tokenizer.Null); err != nil {
+		return nil, err
 	}
 	if err := p.advanceToken(); err != nil {
 		return nil, err
@@ -158,8 +161,9 @@ func (p *Parser) parseNull() (interface{}, error) {
 
 func (p *Parser) parseNumber() (interface{}, error) {
 	// Here you might want to parse the number properly into a float or int
-	if p.currentToken.Type != tokenizer.Number {
-		return nil, fmt.Errorf("expected number token, got %s", p.currentToken.Type)
+
+	if err := p.checkTokenType(tokenizer.Number); err != nil {
+		return nil, err
 	}
 	value, err := strconv.ParseFloat(p.currentToken.Value, 64)
 	if err != nil {
@@ -177,5 +181,22 @@ func (p *Parser) advanceToken() error {
 		return fmt.Errorf("failed to get next token ;%w", err)
 	}
 	p.currentToken = token
+	return nil
+}
+
+func (p *Parser) advanceAndCheckToken(expectedType tokenizer.TokenType) error {
+	if err := p.advanceToken(); err != nil {
+		return err
+	}
+	if p.currentToken.Type != expectedType {
+		return fmt.Errorf("expected %s token, got %s", expectedType, p.currentToken.Type)
+	}
+	return nil
+}
+
+func (p *Parser) checkTokenType(expectedType tokenizer.TokenType) error {
+	if p.currentToken.Type != expectedType {
+		return fmt.Errorf("expected %s  token, got %s", expectedType, p.currentToken.Type)
+	}
 	return nil
 }
